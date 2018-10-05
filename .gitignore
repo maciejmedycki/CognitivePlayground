@@ -23,6 +23,7 @@ x86/
 bld/
 [Bb]in/
 [Oo]bj/
+obj/Debug
 [Ll]og/
 
 # Visual Studio cache/options directory

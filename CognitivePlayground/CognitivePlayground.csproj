@@ -56,13 +56,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AttachedBehavior\KeyPressUpdatePropertyBehavior.cs" />
     <Compile Include="Model\Action.cs" />
     <Compile Include="Model\ConfigurationManager.cs" />
+    <Compile Include="Model\ExtensionMethods\Azure\FaceRectangleExtension.cs" />
+    <Compile Include="Model\ExtensionMethods\Azure\PersonExtension.cs" />
+    <Compile Include="Model\ExtensionMethods\Azure\PersonGroupExtension.cs" />
     <Compile Include="Model\FaceRectangle.cs" />
     <Compile Include="Model\Interface\IConfigurationManager.cs" />
     <Compile Include="Model\LogsAppender.cs" />
+    <Compile Include="Model\Person.cs" />
+    <Compile Include="Model\PersonGroup.cs" />
     <Compile Include="ViewModel\ActionViewModel.cs" />
     <Compile Include="ViewModel\ActionViewModelBase.cs" />
+    <Compile Include="ViewModel\PersonGroupViewModel.cs" />
     <Compile Include="ViewModel\Tabs\CameraTabViewModel.cs" />
     <Compile Include="ViewModel\Tabs\ActionTabViewModel.cs" />
     <Compile Include="ViewModel\Tabs\FaceRecognitionTabViewModel.cs" />
@@ -70,6 +77,18 @@
     <Compile Include="ViewModel\Tabs\LogsTabViewModel.cs" />
     <Compile Include="ViewModel\Tabs\TabItemViewModelBase.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
+    <Compile Include="View\ActionTabItem.xaml.cs">
+      <DependentUpon>ActionTabItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\CameraTabItem.xaml.cs">
+      <DependentUpon>CameraTabItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\FaceTabItem.xaml.cs">
+      <DependentUpon>FaceTabItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\LogTabItem.xaml.cs">
+      <DependentUpon>LogTabItem.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -82,6 +101,22 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="View\ActionTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\CameraTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\FaceTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\LogTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -128,8 +163,6 @@
       <Version>11.0.2</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="View\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

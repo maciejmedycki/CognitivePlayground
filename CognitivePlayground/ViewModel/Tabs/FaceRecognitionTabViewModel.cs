@@ -1,11 +1,11 @@
 ﻿using CognitivePlayground.Model;
+using CognitivePlayground.Model.ExtensionMethods.Azure;
 using GalaSoft.MvvmLight.Command;
 using log4net;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using azure = Microsoft.Azure.CognitiveServices.Vision.Face.Models;
@@ -15,32 +15,19 @@ namespace CognitivePlayground.ViewModel.Tabs
     public class CognitivePlaygroundTabViewModel : TabItemViewModelBase
     {
         private static readonly ILog _logger = LogManager.GetLogger(typeof(CognitivePlaygroundTabViewModel));
-        //TODO: get it from ConfigurationManager
-        private static string _personGroupId = "systellGroup";
-        private readonly IFaceClient faceClient;
-        private ICommand _addPersonGroupCommand;
+        private readonly IFaceClient _faceClient;
+        private readonly PersonGroupViewModel _personGroupViewModel;
         private ICommand _detectFaceCommand;
         private FaceRectangle _faceRectangle = new FaceRectangle();
-        private string _imagePath = @"C:\Users\Dell\Desktop\faceTest3.jpg";
+        private string _imagePath = string.Empty;
 
         public CognitivePlaygroundTabViewModel()
         {
             var subscriptionKey = ConfigurationManager.GetAzureSubscriptionKey();
             var apiUri = ConfigurationManager.GetAzureApiUri();
-            faceClient = new FaceClient(new ApiKeyServiceClientCredentials(subscriptionKey), new System.Net.Http.DelegatingHandler[] { });
-            faceClient.Endpoint = apiUri;
-        }
-
-        public ICommand AddPersonGroupCommand
-        {
-            get
-            {
-                if (_addPersonGroupCommand == null)
-                {
-                    _addPersonGroupCommand = new RelayCommand(DoAddPersonGroup);
-                }
-                return _addPersonGroupCommand;
-            }
+            _faceClient = new FaceClient(new ApiKeyServiceClientCredentials(subscriptionKey), new System.Net.Http.DelegatingHandler[] { });
+            _faceClient.Endpoint = apiUri;
+            _personGroupViewModel = new PersonGroupViewModel(_faceClient, () => { return ImagePath; });
         }
 
         public ICommand DetectFaceCommand
@@ -72,9 +59,7 @@ namespace CognitivePlayground.ViewModel.Tabs
             set
             {
                 _imagePath = value;
-                RaisePropertyChanged(() => ImagePath);
-                RaisePropertyChanged(() => ImageSource);
-                HideFaceRectangle();
+                DoUpdateImagePath();
             }
         }
 
@@ -82,23 +67,27 @@ namespace CognitivePlayground.ViewModel.Tabs
         {
             get
             {
-                return new BitmapImage(new Uri(ImagePath));
+                if (File.Exists(ImagePath))
+                {
+                    return new BitmapImage(new Uri(ImagePath));
+                }
+                else
+                {
+                    _logger.Warn($"Image '{ImagePath}' does not exist");
+                }
+                return null;
+            }
+        }
+
+        public PersonGroupViewModel PersonGroupViewModel
+        {
+            get
+            {
+                return _personGroupViewModel;
             }
         }
 
         public override string Title { get; } = "Face recognition";
-
-        public async void DoAddPersonGroup()
-        {
-            try
-            {
-                await faceClient.PersonGroup.CreateAsync(_personGroupId, "Systell");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex);
-            }
-        }
 
         public async void DoDetectFaceCommand()
         {
@@ -106,7 +95,7 @@ namespace CognitivePlayground.ViewModel.Tabs
             {
                 using (var imageFileStream = File.OpenRead(ImagePath))
                 {
-                    var faceList = await faceClient.Face.DetectWithStreamAsync(imageFileStream, false);
+                    var faceList = await _faceClient.Face.DetectWithStreamAsync(imageFileStream, false);
                     var foundFace = faceList.FirstOrDefault();
                     if (foundFace != null)
                     {
@@ -121,83 +110,26 @@ namespace CognitivePlayground.ViewModel.Tabs
             }
         }
 
-        //TODO: add command
-        private async void DoAddPerson()
+        private void DoUpdateImagePath()
         {
-            //TODO: get from somewhere
-            var name = "Maciej Medycki";
-            var person = await faceClient.PersonGroupPerson.CreateAsync(_personGroupId, name);
-            //TODO: get from somewhere
-            var files = new string[] { "", "" };
-            foreach (var file in files)
-            {
-                using (var imageFileStream = File.OpenRead(file))
-                {
-                    var persistedFace = await faceClient.PersonGroupPerson.AddFaceFromStreamAsync(_personGroupId, person.PersonId, imageFileStream);
-                }
-            }
-        }
-
-        //TODO: add command
-        private async void DoIdentifyFace()
-        {
-            //TODO: get from somewhere
-            var faceFile = "";
-            using (var imageFileStream = File.OpenRead(faceFile))
-            {
-                var faces = await faceClient.Face.DetectWithStreamAsync(imageFileStream);
-                var faceIds = faces.Select(f => f.FaceId.Value).ToList();
-                var identifies = await faceClient.Face.IdentifyAsync(faceIds, _personGroupId, null, 1, 0.7);
-                foreach (var identify in identifies)
-                {
-                    if (identify.Candidates.Count > 0)
-                    {
-                        var candidate = identify.Candidates[0];
-                        var personId = candidate.PersonId;
-                        var person = await faceClient.PersonGroupPerson.GetAsync(_personGroupId, personId);
-                        _logger.Info($"Person found: {person.Name} with confidence: {candidate.Confidence * 100}%");
-                    }
-                    else
-                    {
-                        _logger.Info("No candidates");
-                    }
-                }
-            }
-        }
-
-        //TODO: add command
-        private async void DoTrainGroup()
-        {
-            await faceClient.PersonGroup.TrainAsync(_personGroupId);
-            while (true)
-            {
-                var status = await faceClient.PersonGroup.GetTrainingStatusAsync(_personGroupId);
-                if (status.Status != azure.TrainingStatusType.Running)
-                {
-                    _logger.Info($"PersonGroup {_personGroupId} finshed training with status {status.Status}");
-                    break;
-                }
-                await Task.Delay(500);
-            }
+            HideFaceRectangle();
+            RaisePropertyChanged(() => ImagePath);
+            RaisePropertyChanged(() => ImageSource);
+            HideFaceRectangle();
         }
 
         private void HideFaceRectangle()
         {
-            RaisePropertyChanged(() => FaceRectangle);
             _faceRectangle.Width = 0;
             _faceRectangle.Height = 0;
-            var margin = _faceRectangle.Margin;
-            margin.Top = 0;
-            margin.Left = 0;
+            _faceRectangle.Top = 0;
+            _faceRectangle.Left = 0;
+            RaisePropertyChanged(() => FaceRectangle);
         }
 
         private void UpdateFaceRectangle(azure.FaceRectangle faceRectangle)
         {
-            _faceRectangle.Width = faceRectangle.Width;
-            _faceRectangle.Height = faceRectangle.Height;
-            var margin = _faceRectangle.Margin;
-            margin.Top = faceRectangle.Top;
-            margin.Left = faceRectangle.Left;
+            faceRectangle.UpdateFaceRectangle(ref _faceRectangle);
             RaisePropertyChanged(() => FaceRectangle);
         }
     }

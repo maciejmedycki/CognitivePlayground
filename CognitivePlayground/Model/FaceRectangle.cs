@@ -1,15 +1,10 @@
-﻿using System.Windows;
-
-namespace CognitivePlayground.Model
+﻿namespace CognitivePlayground.Model
 {
-    public class FaceRectangle
+    public struct FaceRectangle
     {
-        public FaceRectangle()
-        {
-            Margin = new Thickness();
-        }
         public double Height { get; set; }
-        public Thickness Margin { get; set; }
+        public double Left { get; set; }
+        public double Top { get; set; }
         public double Width { get; set; }
     }
 }
