@@ -10,8 +10,11 @@
           DataContext="{Binding CameraTabViewModel, Source={StaticResource Locator}}">
     <Grid>
         <StackPanel>
+            <StackPanel Orientation="Horizontal">
             <TextBox Text="{Binding CameraAddress}" />
             <Button Command="{Binding StartCommand}" Content="Start capturing" />
+            </StackPanel>
+            <Image Source="{Binding Image}"/>
         </StackPanel>
     </Grid>
 </TabItem>
