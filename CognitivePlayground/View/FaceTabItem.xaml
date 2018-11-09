@@ -1,98 +1,100 @@
 ﻿<TabItem
-    x:Class="CognitivePlayground.View.FaceTabItem"
+    x:Class="Hodor.View.FaceTabItem"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:ab="clr-namespace:CognitivePlayground.AttachedBehavior"
+    xmlns:ab="clr-namespace:Hodor.AttachedBehavior"
     mc:Ignorable="d"
     d:DesignHeight="450" d:DesignWidth="800"
     Header="{Binding Title}"
-    DataContext="{Binding CognitivePlaygroundTabViewModel, Source={StaticResource Locator}}">
+    DataContext="{Binding HodorTabViewModel, Source={StaticResource Locator}}">
 
     <TabItem.Resources>
         <Style TargetType="TextBox" x:Key="TextBoxInput">
             <Setter Property="MinWidth" Value="100" />
         </Style>
     </TabItem.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Name="PersonGroup" DataContext="{Binding PersonGroupViewModel}">
+    <ScrollViewer>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Name="PersonGroup" DataContext="{Binding PersonGroupViewModel}">
 
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Person Group List" />
-                <Button Command="{Binding ListPersonGroupsCommand}" Content="List person groups" />
-            </StackPanel>
-            <ListBox ItemsSource="{Binding PersonGroups}" SelectedItem="{Binding SelectedPersonGroup, Mode=TwoWay}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="{Binding Name}" />
-                            <Label Content="{Binding PersonGroupId}" />
-                            <Label Content="{Binding UserData}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Create new person group" />
-                <TextBox Text="{Binding NewPersonGroupName}" Style="{StaticResource TextBoxInput}" />
-                <Button Content="Add new person group"  Command="{Binding CreatePersonGroupCommand}" />
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Persons in selected group" />
-                <Button Content="List persons" Command="{Binding ListPersonsCommand}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <ListBox ItemsSource="{Binding Persons}" SelectedItem="{Binding SelectedPerson, Mode=TwoWay}">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Person Group List" />
+                    <Button Command="{Binding ListPersonGroupsCommand}" Content="List person groups" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding PersonGroups}" SelectedItem="{Binding SelectedPersonGroup, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <Label Content="{Binding Name}" />
-                                <Label Content="{Binding PersonId}" />
+                                <Label Content="{Binding PersonGroupId}" />
                                 <Label Content="{Binding UserData}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <ListBox ItemsSource="{Binding SelectedPerson.PersistedFaceIds}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Label Content="{Binding Path=.}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </StackPanel>
 
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Add new person" />
-                <TextBox Text="{Binding NewPersonName}" Style="{StaticResource TextBoxInput}" />
-                <Button Content="AddNewPerson" Command="{Binding AddNewPersonCommand}" />
-            </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Create new person group" />
+                    <TextBox Text="{Binding NewPersonGroupName}" Style="{StaticResource TextBoxInput}" />
+                    <Button Content="Add new person group"  Command="{Binding CreatePersonGroupCommand}" />
+                </StackPanel>
 
-            <Button Content="Train selected PersonGroup" Command="{Binding DoTrainCommand}" />
-        </StackPanel>
-        <StackPanel Grid.Row="1" Name="FaceRecognition">
-            <Label Content="Type in picture path" />
-            <TextBox Text="{Binding ImagePath}" Style="{StaticResource TextBoxInput}" ab:KeyPressUpdatePropertyBehavior.KeyPressUpdateProperty="TextBox.Text">
-            </TextBox>
-            <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding DetectFaceCommand}" Content="DetectFace" />
-                <Button Command="{Binding PersonGroupViewModel.AddFaceToPersonCommand}" Content="AddFace to SelectedPerson" />
-                <Button Command="{Binding PersonGroupViewModel.RecognizeFaceCommand}" Content="Recognize face" />
-            </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Persons in selected group" />
+                    <Button Content="List persons" Command="{Binding ListPersonsCommand}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ListBox ItemsSource="{Binding Persons}" SelectedItem="{Binding SelectedPerson, Mode=TwoWay}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="{Binding Name}" />
+                                    <Label Content="{Binding PersonId}" />
+                                    <Label Content="{Binding UserData}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <ListBox ItemsSource="{Binding SelectedPerson.PersistedFaceIds}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding Path=.}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
 
-            <Canvas>
-                <Image Stretch="None" Margin="0" Source="{Binding ImageSource}">
-                </Image>
-                <Rectangle  Width="{Binding FaceRectangle.Width}" Height="{Binding FaceRectangle.Height}" Fill="Transparent" Stroke="Red" StrokeThickness="1.5" Canvas.Left="{Binding FaceRectangle.Left}" Canvas.Top="{Binding FaceRectangle.Top}" />
-            </Canvas>
-        </StackPanel>
-    </Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Add new person" />
+                    <TextBox Text="{Binding NewPersonName}" Style="{StaticResource TextBoxInput}" />
+                    <Button Content="AddNewPerson" Command="{Binding AddNewPersonCommand}" />
+                </StackPanel>
+
+                <Button Content="Train selected PersonGroup" Command="{Binding DoTrainCommand}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Name="FaceRecognition">
+                <Label Content="Type in picture path" />
+                <TextBox Text="{Binding ImagePath}" Style="{StaticResource TextBoxInput}" ab:KeyPressUpdatePropertyBehavior.KeyPressUpdateProperty="TextBox.Text">
+                </TextBox>
+                <StackPanel Orientation="Horizontal">
+                    <Button Command="{Binding DetectFaceCommand}" Content="DetectFace" />
+                    <Button Command="{Binding PersonGroupViewModel.AddFaceToPersonCommand}" Content="AddFace to SelectedPerson" />
+                    <Button Command="{Binding PersonGroupViewModel.RecognizeFaceCommand}" Content="Recognize face" />
+                </StackPanel>
+
+                <Canvas>
+                    <Image Stretch="None" Margin="0" Source="{Binding ImageSource}">
+                    </Image>
+                    <Rectangle  Width="{Binding FaceRectangle.Width}" Height="{Binding FaceRectangle.Height}" Fill="Transparent" Stroke="Red" StrokeThickness="1.5" Canvas.Left="{Binding FaceRectangle.Left}" Canvas.Top="{Binding FaceRectangle.Top}" />
+                </Canvas>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </TabItem>

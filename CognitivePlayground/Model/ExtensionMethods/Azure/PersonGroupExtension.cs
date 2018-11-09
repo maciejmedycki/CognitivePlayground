@@ -1,6 +1,6 @@
 ﻿using azure = Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 
-namespace CognitivePlayground.Model.ExtensionMethods.Azure
+namespace Hodor.Model.ExtensionMethods.Azure
 {
     public static class PersonGroupExtension
     {

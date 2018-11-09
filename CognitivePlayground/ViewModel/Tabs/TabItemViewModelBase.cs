@@ -1,8 +1,8 @@
-﻿using CognitivePlayground.Model.Interface;
+﻿using Hodor.Model.Interface;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
 
-namespace CognitivePlayground.ViewModel.Tabs
+namespace Hodor.ViewModel.Tabs
 {
     public abstract class TabItemViewModelBase : ViewModelBase
     {

@@ -1,9 +1,10 @@
-﻿using CognitivePlayground.Model;
+﻿using Hodor.Model;
+using GalaSoft.MvvmLight.Threading;
 using log4net;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace CognitivePlayground.ViewModel.Tabs
+namespace Hodor.ViewModel.Tabs
 {
     public class LogsTabViewModel : TabItemViewModelBase
     {
@@ -28,11 +29,14 @@ namespace CognitivePlayground.ViewModel.Tabs
 
         private void LogAdded(string message)
         {
-            if (Logs.Count > _maxLogCount)
+            DispatcherHelper.CheckBeginInvokeOnUI(() =>
             {
-                Logs.RemoveAt(0);
-            }
-            Logs.Add(message);
+                if (Logs.Count > _maxLogCount)
+                {
+                    Logs.RemoveAt(0);
+                }
+                Logs.Add(message);
+            });
         }
 
         public ObservableCollection<string> Logs

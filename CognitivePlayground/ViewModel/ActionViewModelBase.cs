@@ -1,23 +1,24 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using log4net;
+using System;
 using System.Windows.Input;
 
-namespace CognitivePlayground.ViewModel
+namespace Hodor.ViewModel
 {
     public abstract class ActionViewModelBase : ViewModelBase
     {
-        private static readonly ILog _logger = LogManager.GetLogger(typeof(ActionViewModelBase));
         public ICommand _executeCommand;
         protected readonly Model.Action _action;
-        private string _path;
-        private bool _shouldExecute;
+        private static readonly ILog _logger = LogManager.GetLogger(typeof(ActionViewModelBase));
 
         public ActionViewModelBase(Model.Action action)
         {
+            if (action is null)
+            {
+                throw new ArgumentException("Argument cannot be null", "action");
+            }
             _action = action;
-            Path = action.Path;
-            ShouldExecute = action.ShouldExecute;
         }
 
         public Model.Action Action
@@ -40,17 +41,33 @@ namespace CognitivePlayground.ViewModel
             }
         }
 
+        public bool KeepAlive
+        {
+            get
+            {
+                return _action.KeepAlive;
+            }
+            set
+            {
+                if (_action.KeepAlive != value)
+                {
+                    _action.KeepAlive = value;
+                    RaisePropertyChanged(() => KeepAlive);
+                }
+            }
+        }
+
         public string Path
         {
             get
             {
-                return _path;
+                return _action.Path;
             }
             set
             {
-                if (_path != value)
+                if (_action.Path != value)
                 {
-                    _path = value;
+                    _action.Path = value;
                     RaisePropertyChanged(() => Path);
                 }
             }
@@ -60,18 +77,24 @@ namespace CognitivePlayground.ViewModel
         {
             get
             {
-                return _shouldExecute;
+                return _action.ShouldExecute;
             }
             set
             {
-                if (_shouldExecute != value)
+                if (_action.ShouldExecute != value)
                 {
-                    _shouldExecute = value;
+                    _action.ShouldExecute = value;
                     RaisePropertyChanged(() => ShouldExecute);
                 }
             }
         }
 
         public abstract void DoExecute();
+
+        public void Kill()
+        {
+            Action.KeepAlive = false;
+            Action.Kill();
+        }
     }
 }

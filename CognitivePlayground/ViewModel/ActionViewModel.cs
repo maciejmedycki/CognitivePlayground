@@ -1,6 +1,6 @@
 ﻿using log4net;
 
-namespace CognitivePlayground.ViewModel
+namespace Hodor.ViewModel
 {
     public class ActionViewModel : ActionViewModelBase
     {

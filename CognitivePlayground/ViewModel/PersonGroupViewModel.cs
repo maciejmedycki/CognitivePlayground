@@ -1,7 +1,9 @@
-﻿using CognitivePlayground.Model;
-using CognitivePlayground.Model.ExtensionMethods.Azure;
+﻿using Hodor.Model;
+using Hodor.Model.ExtensionMethods.Azure;
+using Hodor.Model.Messages;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using log4net;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using System;
@@ -12,7 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using azure = Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 
-namespace CognitivePlayground.ViewModel
+namespace Hodor.ViewModel
 {
     public class PersonGroupViewModel : ViewModelBase
     {
@@ -274,7 +276,7 @@ namespace CognitivePlayground.ViewModel
             }
         }
 
-        private async void DoListPersonGroups()
+        public async Task ListPersonGroups()
         {
             try
             {
@@ -285,6 +287,11 @@ namespace CognitivePlayground.ViewModel
             {
                 _logger.Error(ex);
             }
+        }
+
+        private async void DoListPersonGroups()
+        {
+            await ListPersonGroups();
         }
 
         private async void DoListPersons()
@@ -324,20 +331,29 @@ namespace CognitivePlayground.ViewModel
                 {
                     var faces = await _faceClient.Face.DetectWithStreamAsync(imageFileStream);
                     var faceIds = faces.Select(f => f.FaceId.Value).ToList();
-                    var identifies = await _faceClient.Face.IdentifyAsync(faceIds, SelectedPersonGroup.PersonGroupId, null, 1, 0.7);
-                    foreach (var identify in identifies)
+                    if (faceIds.Count > 0)
                     {
-                        if (identify.Candidates.Count > 0)
+                        _logger.Info("Face detected");
+                        var identifies = await _faceClient.Face.IdentifyAsync(faceIds, SelectedPersonGroup.PersonGroupId, null, 1, 0.7);
+                        foreach (var identify in identifies)
                         {
-                            var candidate = identify.Candidates[0];
-                            var personId = candidate.PersonId;
-                            var person = await _faceClient.PersonGroupPerson.GetAsync(SelectedPersonGroup.PersonGroupId, personId);
-                            _logger.Info($"Person found: {person.Name} with confidence: {candidate.Confidence * 100}%");
+                            if (identify.Candidates.Count > 0)
+                            {
+                                var candidate = identify.Candidates[0];
+                                var personId = candidate.PersonId;
+                                var person = await _faceClient.PersonGroupPerson.GetAsync(SelectedPersonGroup.PersonGroupId, personId);
+                                _logger.Info($"Person found: {person.Name} with confidence: {candidate.Confidence * 100}%");
+                                Messenger.Default?.Send(new FaceRecognizedMessage());
+                            }
+                            else
+                            {
+                                _logger.Info("No candidates - unabel to recognize face");
+                            }
                         }
-                        else
-                        {
-                            _logger.Info("No candidates");
-                        }
+                    }
+                    else
+                    {
+                        _logger.Info("No faces detected");
                     }
                 }
             }

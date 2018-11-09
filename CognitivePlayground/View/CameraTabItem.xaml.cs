@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace CognitivePlayground.View
+namespace Hodor.View
 {
     /// <summary>
     ///    Interaction logic for CameraTabItem.xaml

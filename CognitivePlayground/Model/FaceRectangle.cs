@@ -1,4 +1,4 @@
-﻿namespace CognitivePlayground.Model
+﻿namespace Hodor.Model
 {
     public struct FaceRectangle
     {

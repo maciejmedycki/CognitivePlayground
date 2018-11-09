@@ -1,57 +1,80 @@
-﻿using GalaSoft.MvvmLight.Command;
+﻿using Hodor.Model;
+using Hodor.Model.Messages;
+using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using log4net;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace CognitivePlayground.ViewModel.Tabs
+namespace Hodor.ViewModel.Tabs
 {
     public class ActionTabViewModel : TabItemViewModelBase
     {
         private static readonly ILog _logger = LogManager.GetLogger(typeof(ActionTabViewModel));
-        private ObservableCollection<ActionViewModelBase> _actions;
-        private ICommand _addActionCommand;
+        private ICommand _addFaceRecognizedActionCommand;
+        private ICommand _addStartupActionCommand;
         private ICommand _executeActionsCommand;
-        private ICommand _removeActionCommand;
+        private ObservableCollection<ActionViewModelBase> _faceRecognizedActions;
+        private ICommand _removeFaceRecognizedActionCommand;
+        private ICommand _removeStartupActionCommand;
         private ICommand _saveChangesCommand;
+        private ObservableCollection<ActionViewModelBase> _startupActions;
 
         public ActionTabViewModel()
         {
-            var actions = ConfigurationManager.GetActions();
-            var actionList = new ObservableCollection<ActionViewModelBase>();
-            foreach (var action in actions)
+            var actionWrapper = ConfigurationManager.GetActions();
+            if (actionWrapper != null)
             {
-                actionList.Add(new ActionViewModel(action));
+                FaceRecognizedActions = new ObservableCollection<ActionViewModelBase>(actionWrapper.FaceRecognizedActions.Select(a => new ActionViewModel(a)));
+                StartupActions = new ObservableCollection<ActionViewModelBase>(actionWrapper.StartupActions.Select(a => new ActionViewModel(a)));
             }
-            Actions = actionList;
+            else
+            {
+                FaceRecognizedActions = new ObservableCollection<ActionViewModelBase>();
+                StartupActions = new ObservableCollection<ActionViewModelBase>();
+            }
+            Messenger.Default?.Register<FaceRecognizedMessage>(this, FaceRecognizedMessageHandler);
+            Messenger.Default?.Register<StartupMessage>(this, StartupMessageHandler);
+            Messenger.Default?.Register<AppExitingMessage>(this, AppExitingHandler);
         }
 
-        public ObservableCollection<ActionViewModelBase> Actions
+        private void AppExitingHandler(AppExitingMessage obj)
+        {
+            foreach (var action in FaceRecognizedActions)
+            {
+                action.Kill();
+            }
+            foreach (var action in StartupActions)
+            {
+                action.Kill();
+            }
+        }
+
+        public ICommand AddFaceRecognizedActionCommand
         {
             get
             {
-                return _actions;
-            }
-            set
-            {
-                if (_actions != value)
+                if (_addFaceRecognizedActionCommand == null)
                 {
-                    _actions = value;
-                    RaisePropertyChanged(() => Actions);
+                    _addFaceRecognizedActionCommand = new RelayCommand(DoAddFaceRecognizedAction);
                 }
+                return _addFaceRecognizedActionCommand;
             }
         }
 
-        public ICommand AddActionCommand
+        public ICommand AddStartupActionCommand
         {
             get
             {
-                if (_addActionCommand == null)
+                if (_addStartupActionCommand == null)
                 {
-                    _addActionCommand = new RelayCommand(DoAddAction);
+                    _addStartupActionCommand = new RelayCommand(DoAddStartupAction);
                 }
-                return _addActionCommand;
+                return _addStartupActionCommand;
             }
         }
 
@@ -67,15 +90,43 @@ namespace CognitivePlayground.ViewModel.Tabs
             }
         }
 
-        public ICommand RemoveActionCommand
+        public ObservableCollection<ActionViewModelBase> FaceRecognizedActions
         {
             get
             {
-                if (_removeActionCommand == null)
+                return _faceRecognizedActions;
+            }
+            set
+            {
+                if (_faceRecognizedActions != value)
                 {
-                    _removeActionCommand = new RelayCommand<ActionViewModel>(DoRemoveAction);
+                    _faceRecognizedActions = value;
+                    RaisePropertyChanged(() => FaceRecognizedActions);
                 }
-                return _removeActionCommand;
+            }
+        }
+
+        public ICommand RemoveFaceRecognizedActionCommand
+        {
+            get
+            {
+                if (_removeFaceRecognizedActionCommand == null)
+                {
+                    _removeFaceRecognizedActionCommand = new RelayCommand<ActionViewModel>(DoRemoveFaceRecognizedAction);
+                }
+                return _removeFaceRecognizedActionCommand;
+            }
+        }
+
+        public ICommand RemoveStartupActionCommand
+        {
+            get
+            {
+                if (_removeStartupActionCommand == null)
+                {
+                    _removeStartupActionCommand = new RelayCommand<ActionViewModel>(DoRemoveStartupAction);
+                }
+                return _removeStartupActionCommand;
             }
         }
 
@@ -91,27 +142,56 @@ namespace CognitivePlayground.ViewModel.Tabs
             }
         }
 
+        public ObservableCollection<ActionViewModelBase> StartupActions
+        {
+            get
+            {
+                return _startupActions;
+            }
+            set
+            {
+                _startupActions = value;
+                RaisePropertyChanged(() => StartupActions);
+            }
+        }
+
         public override string Title { get; } = "Actions";
 
-        public void DoAddAction()
+        public void DoAddFaceRecognizedAction()
         {
-            _logger.Info("DoAddAction() called");
-            Actions.Add(new ActionViewModel(new Model.Action()));
+            _logger.Info("DoAddFaceRecognizedActionCommand() called");
+            FaceRecognizedActions.Add(new ActionViewModel(new Model.Action()));
+        }
+
+        public void DoAddStartupAction()
+        {
+            _logger.Info("DoAddStartupActionCommand() called");
+            StartupActions.Add(new ActionViewModel(new Model.Action()));
         }
 
         public void DoExecuteActions()
         {
             _logger.Info("DoExecuteActions() called");
-            Parallel.ForEach(Actions, CallAction);
+            Parallel.ForEach(FaceRecognizedActions, CallAction);
         }
 
-        public void DoRemoveAction(ActionViewModel actionViewModel)
+        public void DoRemoveFaceRecognizedAction(ActionViewModel actionViewModel)
         {
-            _logger.Info("DoRemoveAction() called");
+            _logger.Info("DoRemoveFaceRecognizedAction() called");
             if (actionViewModel != null)
             {
-                Actions.Remove(actionViewModel);
-                _logger.Info($"DoRemoveAction() removed {actionViewModel?.ToString()}");
+                FaceRecognizedActions.Remove(actionViewModel);
+                _logger.Info($"DoRemoveFaceRecognizedAction() removed {actionViewModel?.ToString()}");
+            }
+        }
+
+        public void DoRemoveStartupAction(ActionViewModel actionViewModel)
+        {
+            _logger.Info("DoRemoveStartupAction() called");
+            if (actionViewModel != null)
+            {
+                StartupActions.Remove(actionViewModel);
+                _logger.Info($"DoRemoveStartupAction() removed {actionViewModel?.ToString()}");
             }
         }
 
@@ -124,7 +204,36 @@ namespace CognitivePlayground.ViewModel.Tabs
         private void DoSaveChange()
         {
             _logger.Info("DoSaveChange() called");
-            ConfigurationManager.SaveActions(Actions.Select(a => a.Action));
+            var actionsWrapper = new ActionsWrapper
+            {
+                FaceRecognizedActions = FaceRecognizedActions.Select(a => a.Action),
+                StartupActions = StartupActions.Select(a => a.Action),
+            };
+            ConfigurationManager.SaveActions(actionsWrapper);
+        }
+
+        private void ExecuteActions(IEnumerable<ActionViewModelBase> actionsToExecute)
+        {
+            if (actionsToExecute != null)
+            {
+                foreach (var action in actionsToExecute)
+                {
+                    action.DoExecute();
+                }
+            }
+        }
+
+        private void FaceRecognizedMessageHandler(FaceRecognizedMessage faceRecognizedMessage)
+        {
+            _logger.Info($"FaceRecognizedMessageHandler() called");
+            ExecuteActions(FaceRecognizedActions);
+        }
+
+        private void StartupMessageHandler(StartupMessage startupMessage)
+        {
+            _logger.Info($"StartupMessageHandler() called");
+            ExecuteActions(StartupActions);
+            Messenger.Default?.Send<StartupActionsCalled>(new StartupActionsCalled());
         }
     }
 }

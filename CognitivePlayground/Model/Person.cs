@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CognitivePlayground.Model
+namespace Hodor.Model
 {
     public struct Person
     {

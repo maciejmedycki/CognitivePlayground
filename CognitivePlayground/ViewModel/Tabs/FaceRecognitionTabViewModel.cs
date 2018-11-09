@@ -1,6 +1,8 @@
-﻿using CognitivePlayground.Model;
-using CognitivePlayground.Model.ExtensionMethods.Azure;
+﻿using Hodor.Model;
+using Hodor.Model.ExtensionMethods.Azure;
+using Hodor.Model.Messages;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using log4net;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using System;
@@ -10,24 +12,49 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using azure = Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 
-namespace CognitivePlayground.ViewModel.Tabs
+namespace Hodor.ViewModel.Tabs
 {
-    public class CognitivePlaygroundTabViewModel : TabItemViewModelBase
+    public class HodorTabViewModel : TabItemViewModelBase
     {
-        private static readonly ILog _logger = LogManager.GetLogger(typeof(CognitivePlaygroundTabViewModel));
+        private static readonly ILog _logger = LogManager.GetLogger(typeof(HodorTabViewModel));
         private readonly IFaceClient _faceClient;
         private readonly PersonGroupViewModel _personGroupViewModel;
         private ICommand _detectFaceCommand;
         private FaceRectangle _faceRectangle = new FaceRectangle();
         private string _imagePath = string.Empty;
 
-        public CognitivePlaygroundTabViewModel()
+        public HodorTabViewModel()
         {
             var subscriptionKey = ConfigurationManager.GetAzureSubscriptionKey();
             var apiUri = ConfigurationManager.GetAzureApiUri();
             _faceClient = new FaceClient(new ApiKeyServiceClientCredentials(subscriptionKey), new System.Net.Http.DelegatingHandler[] { });
             _faceClient.Endpoint = apiUri;
             _personGroupViewModel = new PersonGroupViewModel(_faceClient, () => { return ImagePath; });
+
+            Messenger.Default?.Register<FaceDetectedMessage>(this, FaceDetectedMessageHandler);
+            Messenger.Default?.Register<CapturingStartedMessage>(this, CapturingStartedMessageHandler);
+        }
+
+        private async void CapturingStartedMessageHandler(CapturingStartedMessage obj)
+        {
+            if (PersonGroupViewModel?.SelectedPersonGroup == null || PersonGroupViewModel?.SelectedPersonGroup.PersonGroupId == null)
+            {
+                if (PersonGroupViewModel.PersonGroups == null || PersonGroupViewModel.PersonGroups.Count()==0)
+                {
+                    await PersonGroupViewModel.ListPersonGroups();
+                    if (PersonGroupViewModel.PersonGroups != null)
+                    {
+                        //TODO: use last used person group from config/settings
+                        PersonGroupViewModel.SelectedPersonGroup = PersonGroupViewModel.PersonGroups.FirstOrDefault();
+                    }
+                }
+            }
+        }
+
+        private void FaceDetectedMessageHandler(FaceDetectedMessage faceDetectedMessage)
+        {
+            ImagePath = faceDetectedMessage.Path;
+            PersonGroupViewModel?.RecognizeFaceCommand.Execute(null);
         }
 
         public ICommand DetectFaceCommand
@@ -69,7 +96,7 @@ namespace CognitivePlayground.ViewModel.Tabs
             {
                 if (File.Exists(ImagePath))
                 {
-                    return new BitmapImage(new Uri(ImagePath));
+                    return new BitmapImage(new Uri(Path.GetFullPath(ImagePath), UriKind.Absolute));
                 }
                 else
                 {
@@ -115,7 +142,6 @@ namespace CognitivePlayground.ViewModel.Tabs
             HideFaceRectangle();
             RaisePropertyChanged(() => ImagePath);
             RaisePropertyChanged(() => ImageSource);
-            HideFaceRectangle();
         }
 
         private void HideFaceRectangle()

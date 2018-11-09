@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace CognitivePlayground.Model.Interface
+﻿namespace Hodor.Model.Interface
 {
     public interface IConfigurationManager
     {
-        IEnumerable<Action> GetActions();
+        ActionsWrapper GetActions();
 
         string GetAzureApiUri();
 
@@ -12,7 +10,7 @@ namespace CognitivePlayground.Model.Interface
 
         string GetVideoStreamAddress();
 
-        void SaveActions(IEnumerable<Action> actions);
+        void SaveActions(ActionsWrapper actions);
 
         void SaveVideoStreamAddress(string address);
     }

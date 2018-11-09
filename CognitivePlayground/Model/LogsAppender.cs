@@ -2,7 +2,7 @@
 using log4net.Core;
 using System;
 
-namespace CognitivePlayground.Model
+namespace Hodor.Model
 {
     public class LogsAppender : AppenderSkeleton
     {

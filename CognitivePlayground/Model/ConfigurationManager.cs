@@ -1,28 +1,27 @@
-﻿using CognitivePlayground.Model.Interface;
+﻿using Hodor.Model.Interface;
 using log4net;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using config = System.Configuration;
 
-namespace CognitivePlayground.Model
+namespace Hodor.Model
 {
     public class ConfigurationManager : IConfigurationManager
     {
         private static readonly ILog _logger = LogManager.GetLogger(typeof(ConfigurationManager));
         private static string _actionsKey = "actions";
+        private static string _autoStartKey = "autoStartCapture";
+        private static string _azureFaceApiUri = "faceApiUri";
         private static string _azureSubscriptionKey = "subscriptionKey";
         private static string _videoStreamAddressKey = "streamAddress";
-        private static string _azureFaceApiUri = "faceApiUri";
-        
 
-        public IEnumerable<Action> GetActions()
+        public ActionsWrapper GetActions()
         {
             try
             {
                 _logger.Info("GetActions() called");
                 var actionsJson = GetAppSettings(_actionsKey);
-                var actions = JsonConvert.DeserializeObject<List<Action>>(actionsJson);
+                var actions = JsonConvert.DeserializeObject<ActionsWrapper>(actionsJson);
                 return actions;
             }
             catch (Exception ex)
@@ -30,6 +29,22 @@ namespace CognitivePlayground.Model
                 _logger.Error($"GetActions throw an exception {ex.Message} {ex.StackTrace}");
             }
             return null;
+        }
+
+        public bool GetAutoStart()
+        {
+            try
+            {
+                _logger.Info("GetAutoStart() called");
+                var autoStartString = GetAppSettings(_autoStartKey);
+                var autoStart = bool.Parse(autoStartString);
+                return autoStart;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"GetAutoStart throw an exception {ex.Message} {ex.StackTrace}");
+            }
+            return false;
         }
 
         public string GetAzureApiUri()
@@ -77,7 +92,7 @@ namespace CognitivePlayground.Model
             return null;
         }
 
-        public void SaveActions(IEnumerable<Action> actions)
+        public void SaveActions(ActionsWrapper actions)
         {
             try
             {
@@ -89,6 +104,19 @@ namespace CognitivePlayground.Model
             catch (Exception ex)
             {
                 _logger.Error($"SaveActions throw an exception {ex.Message} {ex.StackTrace}");
+            }
+        }
+
+        public void SaveAutoStart(bool autoStart)
+        {
+            try
+            {
+                _logger.Info("SaveAutoStart() called");
+                AddOrUpdateAppSettings(_autoStartKey, autoStart.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"SaveAutoStart throw an exception {ex.Message} {ex.StackTrace}");
             }
         }
 
